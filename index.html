@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Simple Flappy Bird</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #87CEEB; /* Sky blue */
+    }
+    #gameArea {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+    #bird {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        background: url('image/umbal.jpg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        top: 200px;
+        left: 100px;
+    }
+    #gameOverScreen {
+    position: absolute;
+    width: 900px;
+    height: 600px;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: url('image/Juli.gif') no-repeat center/contain;
+    display: none;
+    z-index: 10;
+    }
+
+    .pipe {
+        position: absolute;
+        width: 60px;
+        background-color: green;
+    }
+</style>
+</head>
+<body>
+
+<div id="gameArea">
+    <div id="bird"></div>
+    <div id="gameOverScreen"></div>
+
+</div>
+
+<script>
+    const gameArea = document.getElementById('gameArea');
+    const bird = document.getElementById('bird');
+    let birdY = 200;
+    let velocity = 0;
+    const gravity = 0.5;
+    const jumpStrength = -8;
+    let pipes = [];
+    let gameInterval;
+    let pipeInterval;
+    let score = 0;
+
+    function createPipe() {
+        const gap = 250;
+        const pipeTopHeight = Math.floor(Math.random() * (window.innerHeight - gap - 100)) + 50;
+        const pipeBottomHeight = window.innerHeight - pipeTopHeight - gap;
+
+        const pipeTop = document.createElement('div');
+        pipeTop.classList.add('pipe');
+        pipeTop.style.height = pipeTopHeight + 'px';
+        pipeTop.style.top = '0px';
+        pipeTop.style.left = window.innerWidth + 'px';
+
+        const pipeBottom = document.createElement('div');
+        pipeBottom.classList.add('pipe');
+        pipeBottom.style.height = pipeBottomHeight + 'px';
+        pipeBottom.style.bottom = '0px';
+        pipeBottom.style.left = window.innerWidth + 'px';
+
+        gameArea.appendChild(pipeTop);
+        gameArea.appendChild(pipeBottom);
+
+        pipes.push({ top: pipeTop, bottom: pipeBottom });
+    }
+
+    function updateGame() {
+        // Bird Physics
+        velocity += gravity;
+        birdY += velocity;
+        bird.style.top = birdY + 'px';
+
+        // Pipes Movement
+        pipes.forEach(pipe => {
+            const left = parseInt(pipe.top.style.left);
+            pipe.top.style.left = (left - 2) + 'px';
+            pipe.bottom.style.left = (left - 2) + 'px';
+
+            // Collision detection
+            if (left < 140 && left > 60) {
+                if (birdY < pipe.top.offsetHeight || birdY + bird.offsetHeight > window.innerHeight - pipe.bottom.offsetHeight) {
+                    gameOver();
+                }
+            }
+
+            // Remove off-screen pipes
+            if (left < -60) {
+                pipe.top.remove();
+                pipe.bottom.remove();
+                pipes = pipes.filter(p => p !== pipe);
+                score++;
+            }
+        });
+
+        // Ground/Top Collision
+        if (birdY > window.innerHeight - bird.offsetHeight || birdY < 0) {
+            gameOver();
+        }
+    }
+
+    function gameOver() {
+        clearInterval(gameInterval);
+        clearInterval(pipeInterval);
+        document.getElementById('gameOverScreen').style.display = 'block';
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.code === 'Space') {
+            velocity = jumpStrength;
+        }
+    });
+
+    // Start the game
+    gameInterval = setInterval(updateGame, 20);
+    pipeInterval = setInterval(createPipe, 2000);
+</script>
+
+</body>
+</html>
